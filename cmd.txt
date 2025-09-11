@@ -1,0 +1,3 @@
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TGB --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity
+
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TGB --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack
