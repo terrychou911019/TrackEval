@@ -222,4 +222,16 @@ def eval_sequence(seq, dataset, tracker, class_list, metrics_list, metric_names)
         data = dataset.get_preprocessed_seq_data(raw_data, cls)
         for metric, met_name in zip(metrics_list, metric_names):
             seq_res[cls][met_name] = metric.eval_sequence(data)
+
+            # Save per-tracklet results if the metric supports it
+            if met_name.lower() == 'purity' and hasattr(metric, 'save_per_tracklet_csv'):
+                out_fol = dataset.get_output_fol(tracker)
+                pertrk_fol = os.path.join(out_fol, 'per_tracklet_purity')
+                os.makedirs(pertrk_fol, exist_ok=True)
+                metric.save_per_tracklet_csv(
+                    res=seq_res[cls][met_name],
+                    seq_name=seq,
+                    tracker_name=tracker,
+                    output_folder=pertrk_fol
+                )
     return seq_res

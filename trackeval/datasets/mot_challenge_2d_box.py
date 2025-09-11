@@ -406,6 +406,10 @@ class MotChallenge2DBox(_BaseDataset):
         # Re-label IDs such that there are no empty IDs
         if len(unique_gt_ids) > 0:
             unique_gt_ids = np.unique(unique_gt_ids)
+
+            # internal ID → original ID mapping
+            data['orig_gt_ids'] = unique_gt_ids.astype(int)
+
             gt_id_map = np.nan * np.ones((np.max(unique_gt_ids) + 1))
             gt_id_map[unique_gt_ids] = np.arange(len(unique_gt_ids))
             for t in range(raw_data['num_timesteps']):
@@ -413,6 +417,10 @@ class MotChallenge2DBox(_BaseDataset):
                     data['gt_ids'][t] = gt_id_map[data['gt_ids'][t]].astype(np.int)
         if len(unique_tracker_ids) > 0:
             unique_tracker_ids = np.unique(unique_tracker_ids)
+
+            # internal ID → original ID mapping
+            data['orig_trk_ids'] = unique_tracker_ids.astype(int)
+
             tracker_id_map = np.nan * np.ones((np.max(unique_tracker_ids) + 1))
             tracker_id_map[unique_tracker_ids] = np.arange(len(unique_tracker_ids))
             for t in range(raw_data['num_timesteps']):
