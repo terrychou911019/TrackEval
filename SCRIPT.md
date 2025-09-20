@@ -13,8 +13,3 @@ filter the tracklets with high purity, and generate:
 ### per_tracklet_length.py
 
 show the frame count of every trackelt as png
-
-### filter_high_purity_tracklets.py
-
-filter tracklet id from `{tracker}/per_tracklet_purity/{seq}_high_purity.csv`
-(filter `{tracker}+gta_splitter`)
