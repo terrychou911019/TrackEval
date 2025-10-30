@@ -12,3 +12,5 @@ data
 **/__pycache__
 .idea
 error_log.txt
+
+backup

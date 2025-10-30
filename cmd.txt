@@ -1,3 +1,11 @@
+TGB:
+
 python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TGB --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity
 
 python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TGB --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack
+
+SportsMOT:
+
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK SportsMOT --SPLIT_TO_EVAL val --METRICS HOTA CLEAR Identity Purity
+
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK SportsMOT --SPLIT_TO_EVAL val --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack

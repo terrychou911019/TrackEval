@@ -4,53 +4,40 @@ import csv
 from typing import List, Dict, Optional
 import pandas as pd
 
+# --- Configuration (Mostly unchanged, but some flags are now ignored) ---
+# NOTE: SHOW_ALL_SEQUENCES and WRITE_SUMMARY_CSV are effectively ignored
+# as we are now focusing only on the COMBINED row for the final table.
+SHOW_ALL_SEQUENCES = False # Set to False to enforce COMBINED only logic
+WRITE_SUMMARY_CSV = False
+
+DATASET_NAME = "SportsMOT-val"
+
 # List all CSV paths here (each CSV contains multiple seq rows and one COMBINED row)
 SUMMARY_CSV_PATHS: List[Path] = [
-    Path(r"data\trackers\mot_challenge\TGB-test\botsort\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\botsort+gta_splitter\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\botsort+gta_splitter-high_purity+gta_connector\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\botsort+gta_splitter-high_purity_filtered+gta_connector\pedestrian_detailed.csv"),
-    # Path(r"data\trackers\mot_challenge\TGB-test\botsort+gta\pedestrian_detailed.csv"),
-
-    Path(r"data\trackers\mot_challenge\TGB-test\bytetrack\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\bytetrack+gta_splitter\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\bytetrack+gta_splitter-high_purity+gta_connector\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\bytetrack+gta_splitter-high_purity_filtered+gta_connector\pedestrian_detailed.csv"),
-    # Path(r"data\trackers\mot_challenge\TGB-test\bytetrack+gta\pedestrian_detailed.csv"),
-
-    Path(r"data\trackers\mot_challenge\TGB-test\hybridsort\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\hybridsort+gta_splitter\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\hybridsort+gta_splitter-high_purity+gta_connector\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\hybridsort+gta_splitter-high_purity_filtered+gta_connector\pedestrian_detailed.csv"),
-    # Path(r"data\trackers\mot_challenge\TGB-test\hybridsort+gta\pedestrian_detailed.csv"),
-
-    Path(r"data\trackers\mot_challenge\TGB-test\ocsort\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\ocsort+gta_splitter\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\ocsort+gta_splitter-high_purity+gta_connector\pedestrian_detailed.csv"),
-    Path(r"data\trackers\mot_challenge\TGB-test\ocsort+gta_splitter-high_purity_filtered+gta_connector\pedestrian_detailed.csv"),
-    # Path(r"data\trackers\mot_challenge\TGB-test\ocsort+gta\pedestrian_detailed.csv"),
+    Path(f"data/trackers/mot_challenge/{DATASET_NAME}/botsort/pedestrian_detailed.csv"),
+    Path(f"data/trackers/mot_challenge/{DATASET_NAME}/bytetrack/pedestrian_detailed.csv"),
 ]
 
 # The key metrics you want to display (you can add or remove as needed)
 KEEP_METRICS: List[str] = [
-    "HOTA", "AssA", "DetA", "IDF1", "MOTA", "IDs", "Purity"
+    "HOTA", "AssA", "DetA", "IDF1", "MOTA", "IDs", "Purity",
 ]
 
 # Column aliases: map logical metric names to actual CSV column names
-# (HOTA uses HOTA___AUC or HOTA(0); Purity uses Purity___AUC or Purity(0); 
-#  others usually match directly without mapping)
+# (HOTA uses HOTA___AUC or HOTA(0); Purity uses Purity___AUC or Purity(0);
+# others usually match directly without mapping)
 KEY_ALIASES: Dict[str, List[str]] = {
-    "HOTA":   ["HOTA___AUC", "HOTA(0)", "HOTA___0", "HOTA0"],
-    "AssA":   ["AssA___AUC", "AssA(0)", "AssA___0", "AssA0"],
-    "DetA":   ["DetA___AUC", "DetA(0)", "DetA___0", "DetA0"],
+    "HOTA":  ["HOTA___AUC", "HOTA(0)", "HOTA___0", "HOTA0"],
+    "AssA":  ["AssA___AUC", "AssA(0)", "AssA___0", "AssA0"],
+    "DetA":  ["DetA___AUC", "DetA(0)", "DetA___0", "DetA0"],
     "Purity": ["Purity___AUC", "Purity(0)", "Purity___0", "Purity0"],
     # "IDF1": ["IDF1"], "MOTA": ["MOTA"], "IDs": ["IDs"]
 }
 
 # Whether to output a merged CSV (all trackers × seq)
-WRITE_SUMMARY_CSV = True
 SUMMARY_OUT_PATH = Path("key_metrics_summary_all.csv")
 
+# --- Helper Functions (Unchanged) ---
 
 def _pick_column(cols: List[str], logical_name: str) -> Optional[str]:
     """
@@ -84,8 +71,9 @@ def load_tracker_df(path: Path, keep_metrics: List[str]) -> Optional[pd.DataFram
     for k in keep_metrics:
         actual = _pick_column(list(df.columns), k)
         if actual is None:
-            print(f"⚠️  {path.parent.name} missing column: {k} (no matching name found), will mark as N/A")
-        resolved_cols[k] = actual  # could be None
+            # Note: This print is fine to keep, helps debug missing columns
+            print(f"⚠️ {path.parent.name} missing column: {k} (no matching name found), will mark as N/A")
+        resolved_cols[k] = actual # could be None
 
     # Build output DataFrame: keep seq + selected metrics (missing filled with N/A)
     out = pd.DataFrame()
@@ -99,8 +87,15 @@ def load_tracker_df(path: Path, keep_metrics: List[str]) -> Optional[pd.DataFram
 
     # Add tracker name column
     out.insert(0, "Tracker", path.parent.name)
+    
+    # *** KEY CHANGE: Filter immediately to only keep the 'COMBINED' row ***
+    combined_row = out[out["seq"].str.upper() == "COMBINED"]
+    
+    if combined_row.empty:
+        print(f"❌ {path.parent.name} CSV does not contain a 'COMBINED' row.")
+        return None # Return None if combined row is missing
 
-    return out
+    return combined_row.iloc[[0]].copy() # Ensure it's a single-row DataFrame
 
 
 def _fmt_cell(x) -> str:
@@ -110,82 +105,82 @@ def _fmt_cell(x) -> str:
     try:
         if pd.isna(x):
             return "N/A"
-        if float(x).is_integer():
-            return f"{int(x)}"
+        # MOTA, HOTA, etc. are usually between 0 and 1, so we multiply by 100
+        # IDs is an integer count. Check if it's close to an integer.
+        if abs(float(x) - round(float(x))) < 1e-6:
+             return f"{int(round(float(x)))}"
         else:
-            return f"{(100 * float(x)):.3f}"
+             return f"{(100 * float(x)):.3f}"
     except Exception:
         return str(x)
 
+# --- Core Logic (Modified to print consolidated table) ---
 
-def print_table_for_tracker(df_tracker: pd.DataFrame, keep_metrics: List[str]):
+def print_combined_results_table(df_combined: pd.DataFrame, keep_metrics: List[str]):
     """
-    Print results for one tracker (df contains only one tracker):
-      1) one row per sequence
-      2) COMBINED row (if exists)
+    Prints a consolidated table of COMBINED results.
+    Rows are trackers, columns are metrics.
     """
-    if df_tracker.empty:
+    if df_combined.empty:
+        print("No valid COMBINED results to display.")
         return
 
-    tracker_name = df_tracker["Tracker"].iloc[0]
-    # Sort sequences: put COMBINED at the end
-    seqs = df_tracker["seq"].tolist()
-    seq_order = sorted([s for s in seqs if s.upper() != "COMBINED"])
-    if "COMBINED" in [s.upper() for s in seqs]:
-        seq_order += ["COMBINED"]
+    print(f"📊 Consolidated COMBINED Tracking Metrics on {DATASET_NAME} 📊")
+    print("Rows: Trackers | Columns: Metrics")
 
-    # Column width design
-    seq_width = max(len("Seq"), max((len(s) for s in seq_order), default=0)) + 2
-    col_width = 10
+    # Define column widths
+    tracker_col_name = "Tracker"
+    tracker_width = max(len(tracker_col_name), max((len(t) for t in df_combined[tracker_col_name]), default=0)) + 2
+    metric_width = 12 # Sufficient width for formatted percentage + padding
 
-    header = f"{'Seq':<{seq_width}}" + "".join(f"{k:>{col_width}}" for k in keep_metrics)
-    sep = "-" * (seq_width + col_width * len(keep_metrics))
+    # Create Header
+    header = f"{tracker_col_name:<{tracker_width}}" + "".join(f"{k:>{metric_width}}" for k in keep_metrics)
+    sep = "=" * (tracker_width + metric_width * len(keep_metrics))
 
-    print(f"\n=== {tracker_name} ===")
+    print(sep)
     print(header)
     print(sep)
 
-    for s in seq_order:
-        row = df_tracker[df_tracker["seq"].str.upper() == s.upper()]
-        if row.empty:
-            continue
-        row = row.iloc[0]
+    # Print data rows
+    for index, row in df_combined.iterrows():
+        tracker_name = row[tracker_col_name]
         vals = [_fmt_cell(row[k]) for k in keep_metrics]
-        print(f"{s:<{seq_width}}" + "".join(f"{v:>{col_width}}" for v in vals))
+        print(f"{tracker_name:<{tracker_width}}" + "".join(f"{v:>{metric_width}}" for v in vals))
 
-    print("=" * len(sep))
+    print(sep)
 
 
 def main(paths: List[Path]):
-    all_rows: List[pd.DataFrame] = []
+    all_combined_rows: List[pd.DataFrame] = []
+    
+    # 1. Load data, filter for COMBINED row, and collect
     for p in paths:
-        df = load_tracker_df(p, KEEP_METRICS)
-        if df is not None:
-            all_rows.append(df)
+        # load_tracker_df is now modified to return ONLY the COMBINED row (or None)
+        df_combined_row = load_tracker_df(p, KEEP_METRICS)
+        if df_combined_row is not None:
+            all_combined_rows.append(df_combined_row)
 
-    if not all_rows:
-        print("No valid CSV files found, exiting.")
+    if not all_combined_rows:
+        print("No valid CSV files or 'COMBINED' rows found, exiting.")
         return
 
-    full = pd.concat(all_rows, ignore_index=True)
+    # 2. Concatenate all single-row DataFrames into one table
+    full_combined_df = pd.concat(all_combined_rows, ignore_index=True)
+    
+    # Remove the redundant 'seq' column (which is "COMBINED" for all rows)
+    if 'seq' in full_combined_df.columns:
+        full_combined_df = full_combined_df.drop(columns=['seq'])
 
-    # Print grouped by tracker
-    for tracker, df_tracker in full.groupby("Tracker", sort=True):
-        print_table_for_tracker(df_tracker, KEEP_METRICS)
+    # 3. Sort by Tracker name for consistency
+    full_combined_df = full_combined_df.sort_values(by="Tracker").reset_index(drop=True)
 
-        # Reminder: if COMBINED row is missing
-        if not any(df_tracker["seq"].str.upper() == "COMBINED"):
-            print(f"⚠️  {tracker} CSV does not contain a 'COMBINED' row. "
-                  f"If you need combined metrics, make sure TrackEval outputs it "
-                  f"or define your own weighted rule.")
+    # 4. Print the final consolidated table
+    print_combined_results_table(full_combined_df, KEEP_METRICS)
 
-    # Export merged summary file (optional)
+    # The WRITE_SUMMARY_CSV logic is removed as per the simplified requirement,
+    # but could be re-added if needed.
     if WRITE_SUMMARY_CSV:
-        try:
-            full.to_csv(SUMMARY_OUT_PATH, index=False)
-            print(f"\n✅ Merged summary written: {SUMMARY_OUT_PATH}")
-        except Exception as e:
-            print(f"❌ Failed to write merged CSV: {e}")
+         print("\nNOTE: WRITE_SUMMARY_CSV is False, skipping summary output.")
 
 
 if __name__ == "__main__":
