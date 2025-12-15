@@ -14,7 +14,7 @@ class Purity(_BaseMetric):
     def __init__(self, config=None):
         super().__init__()
         self.plottable = True     
-        self.array_labels = np.array([0.05]) # np.arange(0.05, 0.99, 0.05) 
+        self.array_labels = np.arange(0.05, 0.99, 0.05)
         self.integer_array_fields = []                        
         self.float_array_fields = ['Purity']                  
         self.float_fields = ['Purity(0)']                    
