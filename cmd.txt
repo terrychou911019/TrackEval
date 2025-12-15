@@ -1,11 +1,23 @@
-TGB:
+SportsMOT val:
+
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK SportsMOT --SPLIT_TO_EVAL val --METRICS HOTA CLEAR Identity Purity
+
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK SportsMOT --SPLIT_TO_EVAL val --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack
+
+TGB test:
 
 python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TGB --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity
 
 python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TGB --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack
 
-SportsMOT:
+TrackID3x3-test
 
-python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK SportsMOT --SPLIT_TO_EVAL val --METRICS HOTA CLEAR Identity Purity
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TrackID3x3 --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity
 
-python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK SportsMOT --SPLIT_TO_EVAL val --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TrackID3x3 --SPLIT_TO_EVAL test --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack
+
+TrackID3x3-train
+
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TrackID3x3 --SPLIT_TO_EVAL train --METRICS HOTA CLEAR Identity Purity
+
+python scripts/run_mot_challenge.py --GT_FOLDER data/gt/mot_challenge/ --TRACKERS_FOLDER data/trackers/mot_challenge/ --BENCHMARK TrackID3x3 --SPLIT_TO_EVAL train --METRICS HOTA CLEAR Identity Purity --TRACKERS_TO_EVAL bytetrack
