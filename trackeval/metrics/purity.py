@@ -130,6 +130,7 @@ class Purity(_BaseMetric):
         res['per_trk_TP']     = tp_per_trk_0
         res['per_trk_MainGT'] = np.where(valid_mask_0, main_gt_per_trk_0, -1)
         res['per_trk_MainTP'] = main_tp_per_trk_0
+        res['per_trk_matches'] = matches_count_0
 
         # Store original tracker IDs 
         num_trk = matches_count_0.shape[1]
@@ -239,20 +240,56 @@ class Purity(_BaseMetric):
         out_path_csv = os.path.join(out_dir, f'{seq_name}.csv')
         df.to_csv(out_path_csv, index=False)
 
-        # Sort by purity
-        df_sorted = df.sort_values('purity', ascending=True)
+        # ---------------------------------------------------------
+        # Plotting the Stacked Bar Chart
+        # ---------------------------------------------------------
+        matches_mat = res['per_trk_matches'] # Shape: (num_gt_ids, num_tracker_ids)
+        
+        # Find indices of valid trackers (TP > 0)
+        valid_trk_indices = np.where(matches_mat.sum(axis=0) > 0)[0]
+        
+        # Sort trackers by purity (ascending) to maintain original logic, 
+        # or sort by tracker_id for better temporal reading. Here we sort by tracker_id.
+        sorted_trk_indices = valid_trk_indices[np.argsort(orig_trk_ids[valid_trk_indices])]
+        
+        x_labels = [str(orig_trk_ids[i]) for i in sorted_trk_indices]
+        
+        fig, ax = plt.subplots(figsize=(12, 6))
+        
+        # Array to keep track of the bottom position for stacked bars
+        bottoms = np.zeros(len(sorted_trk_indices))
+        
+        # Use a colormap with enough distinct colors (tab20 has 20 colors)
+        cmap = plt.get_cmap('tab20')
+        
+        # Iterate over each Ground Truth to build the stacks
+        for gt_idx in range(matches_mat.shape[0]):
+            tp_counts = matches_mat[gt_idx, sorted_trk_indices]
+            
+            # Skip if this GT has no matches with any valid tracker
+            if np.sum(tp_counts) == 0:
+                continue
+                
+            gt_label = str(orig_gt_ids[gt_idx])
+            color = cmap(gt_idx % 20) # Modulo 20 to recycle colors if GTs > 20
+            
+            # Plot the segment for the current GT
+            ax.bar(x_labels, tp_counts, bottom=bottoms, label=f'GT {gt_label}', color=color)
+            
+            # Update the bottom positions for the next GT segment
+            bottoms += tp_counts
 
-        # Plot Purity per tracklet
-        plt.figure(figsize=(10, 4))
-        plt.bar(df_sorted['tracker_id'].astype(str), df_sorted['purity'])
-        plt.ylim(0, 1.05)
-        plt.xlabel('Tracklet ID')
-        plt.ylabel('Purity')
-        plt.title(f'Purity per Tracklet - {seq_name}')
+        ax.set_xlabel('Tracker ID')
+        ax.set_ylabel('Matched Frames (TP)')
+        ax.set_title(f'Tracklet Composition by GT ID - {seq_name}')
         plt.xticks(rotation=90)
-        plt.tight_layout()
+        
+        # Move legend outside the plot to prevent it from covering the bars
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.85, box.height])
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='small', ncol=2, title="GT IDs")
 
-        # Save to PNG
-        out_path_png = os.path.join(out_dir, f'{seq_name}.png')
+        plt.tight_layout()
+        out_path_png = os.path.join(out_dir, f'{seq_name}_stacked.png')
         plt.savefig(out_path_png, bbox_inches='tight')
         plt.close()
