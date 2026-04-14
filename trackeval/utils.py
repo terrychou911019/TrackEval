@@ -87,7 +87,7 @@ def write_summary_results(summaries, cls, output_folder):
     default_order = ['HOTA', 'DetA', 'AssA', 'DetRe', 'DetPr', 'AssRe', 'AssPr', 'LocA', 'OWTA', 'HOTA(0)', 'LocA(0)',
                      'HOTALocA(0)', 'MOTA', 'MOTP', 'MODA', 'CLR_Re', 'CLR_Pr', 'MTR', 'PTR', 'MLR', 'CLR_TP', 'CLR_FN',
                      'CLR_FP', 'IDSW', 'MT', 'PT', 'ML', 'Frag', 'sMOTA', 'IDF1', 'IDR', 'IDP', 'IDTP', 'IDFN', 'IDFP',
-                     'Dets', 'GT_Dets', 'IDs', 'GT_IDs']
+                     'Dets', 'GT_Dets', 'IDs', 'GT_IDs', 'ID_Ratio']
     default_ordered_dict = OrderedDict(zip(default_order, [None for _ in default_order]))
     for f, v in zip(fields, values):
         default_ordered_dict[f] = v
