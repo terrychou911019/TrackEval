@@ -19,6 +19,12 @@ class Count(_BaseMetric):
             return 0.0
         return 1.0 - abs(num_tracker_ids - num_gt_ids) / denom
 
+    @staticmethod
+    def _average_id_ratio(all_res):
+        if len(all_res) == 0:
+            return 0.0
+        return sum([all_res[k]['ID_Ratio'] for k in all_res.keys()]) / len(all_res)
+
     @_timing.time
     def eval_sequence(self, data):
         """Returns counts for one sequence"""
@@ -38,7 +44,7 @@ class Count(_BaseMetric):
         res = {}
         for field in self.integer_fields:
             res[field] = self._combine_sum(all_res, field)
-        res['ID_Ratio'] = self._calc_id_ratio(res['IDs'], res['GT_IDs'])
+        res['ID_Ratio'] = self._average_id_ratio(all_res)
         return res
 
     def combine_classes_class_averaged(self, all_res, ignore_empty_classes=None):
@@ -46,7 +52,7 @@ class Count(_BaseMetric):
         res = {}
         for field in self.integer_fields:
             res[field] = self._combine_sum(all_res, field)
-        res['ID_Ratio'] = self._calc_id_ratio(res['IDs'], res['GT_IDs'])
+        res['ID_Ratio'] = self._average_id_ratio(all_res)
         return res
 
     def combine_classes_det_averaged(self, all_res):
@@ -54,5 +60,5 @@ class Count(_BaseMetric):
         res = {}
         for field in self.integer_fields:
             res[field] = self._combine_sum(all_res, field)
-        res['ID_Ratio'] = self._calc_id_ratio(res['IDs'], res['GT_IDs'])
+        res['ID_Ratio'] = self._average_id_ratio(all_res)
         return res
