@@ -234,8 +234,10 @@ class Purity(_BaseMetric):
         # Filter out tracker_ids with no TP
         df = df[df['tp'] > 0].copy()
 
-        # Save to CSV
-        out_dir = os.path.join(output_folder)
+        # Save to CSV (use extended-length path on Windows to avoid MAX_PATH limit)
+        out_dir = os.path.abspath(output_folder)
+        if os.name == 'nt' and not out_dir.startswith('\\\\?\\'):
+            out_dir = '\\\\?\\' + out_dir
         os.makedirs(out_dir, exist_ok=True)
         out_path_csv = os.path.join(out_dir, f'{seq_name}.csv')
         df.to_csv(out_path_csv, index=False)
